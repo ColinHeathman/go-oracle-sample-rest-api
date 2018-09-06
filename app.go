@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -13,34 +14,38 @@ import (
 	ldap "gopkg.in/ldap.v2"
 )
 
-type request struct {
-	ID int `json:"id"`
-}
-
-type response struct {
-	ID        int    `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-}
-
 var db *sql.DB
 var ad *ldap.Conn
 
 func main() {
+	// Parse CLI flags
 	flag.Parse()
 
 	glog.Info("Starting up")
 
 	glog.Info("Connecting to database")
-
 	db = ConnectDB()
+
+	// Query database
+	row := db.QueryRow(`SELECT 1 FROM DUAL;`)
+	var dummy string
+	if err := row.Scan(&dummy); err != nil {
+		log.Fatal(err)
+	}
+	if dummy != "1" {
+		log.Fatal("Failed to connect to Database")
+	}
+
+	glog.Info("Connecting to LDAP")
 	ad = ConnectLDAP()
 
+	// CAS configuration
 	casURL, _ := url.Parse("https://cas.unbc.ca/cas")
 	client := cas.NewClient(&cas.Options{
 		URL: casURL,
 	})
 
+	// Request path router
 	router := mux.NewRouter()
 
 	router.HandleFunc("/health", home).Methods("GET")
@@ -59,5 +64,17 @@ func main() {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok")
+
+	// Query database
+	row := db.QueryRow(`SELECT 1 FROM DUAL;`)
+	var dummy string
+	if err := row.Scan(&dummy); err != nil {
+		log.Fatal(err)
+	}
+	if dummy != "1" {
+		fmt.Fprintf(w, "Failed to connect to Database")
+	} else {
+		fmt.Fprintf(w, "ok")
+	}
+
 }

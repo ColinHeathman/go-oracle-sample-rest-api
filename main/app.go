@@ -7,12 +7,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"gopkg.in/ldap.v2"
-
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
-
-	"gopkg.in/cas.v2"
+	cas "gopkg.in/cas.v2"
+	ldap "gopkg.in/ldap.v2"
 )
 
 type request struct {
@@ -43,13 +41,13 @@ func main() {
 		URL: casURL,
 	})
 
-	r := mux.NewRouter()
+	router := mux.NewRouter()
 
-	r.HandleFunc("/health", home).Methods("GET")
-	r.HandleFunc("/get", GetResponder).Methods("GET")
-	r.HandleFunc("/post", PostResponder).Methods("POST")
+	router.HandleFunc("/health", home).Methods("GET")
+	router.HandleFunc("/get", GetResponder).Methods("GET")
+	router.HandleFunc("/post", PostResponder).Methods("POST")
 
-	if err := http.ListenAndServe(":8080", client.Handle(r)); err != nil {
+	if err := http.ListenAndServe(":8080", client.Handle(router)); err != nil {
 		glog.Errorf("Error from HTTP Server: %v", err)
 	}
 
@@ -61,5 +59,5 @@ func main() {
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok") 
+	fmt.Fprintf(w, "ok")
 }

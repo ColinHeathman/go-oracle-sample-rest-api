@@ -6,7 +6,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"gopkg.in/cas.v2"
+	cas "gopkg.in/cas.v2"
 )
 
 type templateBinding struct {
